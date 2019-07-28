@@ -1,6 +1,6 @@
 # goban - minimal and concurrent CUI
 
-package goban (碁盤, meainig of Go game board in Japanese) provides CUI with simple API.
+package goban (碁盤, meaning of Go game board in Japanese) provides CUI with simple API.
 
 ## Hello World
 
