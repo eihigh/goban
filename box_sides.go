@@ -1,7 +1,9 @@
 package goban
 
 func (b *Box) Enclose(title string) *Box {
-	return b.DrawSides(title, 1, 1, 1, 1)
+	newb := b.DrawSides(title, 1, 1, 1, 1)
+	newb.Clear()
+	return newb
 }
 
 func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
