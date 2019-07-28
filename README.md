@@ -43,9 +43,9 @@ goban is under active development. The API is subject to change.
 
 ## TODO
 
-* [] Flexbox layouts
-* [] More widgets
-* [] Mouse support
+* [ ] Flexbox layouts
+* [ ] More widgets
+* [ ] Mouse support
 
 ## Documentation
 
