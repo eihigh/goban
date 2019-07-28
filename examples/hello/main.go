@@ -17,5 +17,5 @@ func app(_ context.Context, es goban.Events) error {
 }
 
 func view() {
-	goban.Screen().Enclose("hello").Prints("Hello World!")
+	goban.Screen().Enclose("hello").Prints("Hello World!\nPress any key to exit.")
 }
