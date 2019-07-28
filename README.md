@@ -4,7 +4,7 @@ package goban (碁盤, meainig of Go game board in Japanese) provides CUI with s
 
 ## Hello World
 
-```
+```go
 package main
 
 import (
