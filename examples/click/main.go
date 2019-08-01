@@ -35,6 +35,11 @@ type buttonView struct {
 }
 
 func (v *buttonView) View() {
-	v.button = goban.NewBox(0, 0, 15, 3).CenterOf(goban.Screen())
-	v.button.Enclose("button").Puts(text)
+	v.button = goban.NewBox(0, 0, 15, 3).CenterOf(goban.Screen()).Enclose("button")
+
+	b := goban.Buffer{
+		HAlign: goban.AlignCenter,
+	}
+	b.Prints(text)
+	b.Flush(v.button)
 }
