@@ -8,6 +8,12 @@ import (
 
 var (
 	text = "click here"
+
+	grid = goban.NewGrid(
+		"    1fr    1fr",
+		"1fr msg    msg",
+		"3em cancel ok",
+	)
 )
 
 func main() {
@@ -20,26 +26,33 @@ func app(_ context.Context, es goban.Events) error {
 
 	for {
 		goban.Show()
-		if e := es.ReadMouse(); v.button.IsClicked(e) {
-			if text == "on" {
-				text = "off"
-			} else {
-				text = "on"
-			}
+		switch e := es.ReadMouse(); {
+		case v.cancel.IsClicked(e):
+			text = "canceled"
+		case v.ok.IsClicked(e):
+			text = "ok"
 		}
 	}
 }
 
 type buttonView struct {
-	button *goban.Box
+	cancel, ok *goban.Box
 }
 
 func (v *buttonView) View() {
-	v.button = goban.NewBox(0, 0, 15, 3).CenterOf(goban.Screen()).Enclose("button")
-
-	b := goban.Buffer{
+	b := goban.NewBox(0, 0, 30, 7).CenterOf(goban.Screen()).Enclose("")
+	msgBox := b.GridItem(grid, "msg")
+	buf := goban.Buffer{
 		HAlign: goban.AlignCenter,
 	}
-	b.Prints(text)
-	b.Flush(v.button)
+	buf.Prints(text)
+	buf.Flush(msgBox)
+
+	okBox := goban.NewBox(0, 0, 4, 1).CenterOf(b.GridItem(grid, "ok"))
+	okBox.Prints("[ok]")
+	v.ok = okBox
+
+	cancelBox := goban.NewBox(0, 0, 8, 1).CenterOf(b.GridItem(grid, "cancel"))
+	cancelBox.Prints("[cancel]")
+	v.cancel = cancelBox
 }
