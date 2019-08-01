@@ -52,7 +52,7 @@ func Screen() *Box {
 	}
 }
 
-func (b *Box) Fit(dst *Box, srcx, srcy, dstx, dsty float64) *Box {
+func (b *Box) Fit(dst *Box, dstx, dsty, srcx, srcy float64) *Box {
 	spx, spy := b.rel(srcx, srcy)
 	dpx, dpy := dst.rel(dstx, dsty)
 	dx, dy := dpx-spx, dpy-spy
