@@ -72,6 +72,9 @@ func (b *Box) rel(x, y float64) (int, int) {
 }
 
 func (b *Box) IsClicked(e *tcell.EventMouse) bool {
+	if b == nil {
+		return false
+	}
 	if e.Buttons()&tcell.Button1 == 0 {
 		return false
 	}
