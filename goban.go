@@ -38,6 +38,17 @@ func (es Events) ReadKey() *tcell.EventKey {
 	}
 }
 
+// ReadMouse waits for a mouse event to the channel and returns it.
+// Other events are ignored.
+func (es Events) ReadMouse() *tcell.EventMouse {
+	for {
+		e := <-es
+		if e, ok := e.(*tcell.EventMouse); ok {
+			return e
+		}
+	}
+}
+
 // Show calls each View to refresh the screen.
 func Show() {
 	screen.Clear()
@@ -78,6 +89,7 @@ func Main(app func(context.Context, Events) error, viewfns ...func()) error {
 	}
 
 	screen.SetStyle(tcell.StyleDefault)
+	screen.EnableMouse()
 	screen.Clear()
 
 	for _, f := range viewfns {

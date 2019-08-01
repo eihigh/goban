@@ -52,6 +52,41 @@ func Screen() *Box {
 	}
 }
 
+func (b *Box) Fit(dst *Box, dstx, dsty, srcx, srcy float64) *Box {
+	spx, spy := b.rel(srcx, srcy)
+	dpx, dpy := dst.rel(dstx, dsty)
+	dx, dy := dpx-spx, dpy-spy
+	return NewBox(b.Pos.X+dx, b.Pos.Y+dy, b.Size.X, b.Size.Y)
+}
+
+func (b *Box) CenterOf(dst *Box) *Box {
+	return b.Fit(dst, 0, 0, 0, 0)
+}
+
+func (b *Box) rel(x, y float64) (int, int) {
+	x = x/2 + 0.5 // [-1, 1] => [0, 1]
+	y = y/2 + 0.5
+	px := b.Pos.X + int(float64(b.Size.X)*x)
+	py := b.Pos.Y + int(float64(b.Size.Y)*y)
+	return px, py
+}
+
+func (b *Box) IsClicked(e *tcell.EventMouse) bool {
+	if b == nil {
+		return false
+	}
+	if e.Buttons()&tcell.Button1 == 0 {
+		return false
+	}
+	x, y := e.Position()
+	ax, ay := b.Pos.X, b.Pos.Y
+	bx, by := ax+b.Size.X, ay+b.Size.Y
+	if ax <= x && x < bx && ay <= y && y < by {
+		return true
+	}
+	return false
+}
+
 func (b *Box) Clear() {
 	for x := b.Pos.X; x < b.Pos.X+b.Size.X; x++ {
 		for y := b.Pos.Y; y < b.Pos.Y+b.Size.Y; y++ {

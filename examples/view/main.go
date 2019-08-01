@@ -23,9 +23,13 @@ func app(_ context.Context, es goban.Events) error {
 		goban.Show()
 		switch k := es.ReadKey(); k.Key() {
 		case tcell.KeyUp:
-			v.cursor--
+			if v.cursor > 0 {
+				v.cursor--
+			}
 		case tcell.KeyDown:
-			v.cursor++
+			if v.cursor < len(v.items)-1 {
+				v.cursor++
+			}
 		}
 	}
 }
