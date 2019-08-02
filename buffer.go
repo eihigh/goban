@@ -34,6 +34,8 @@ func (b *Buffer) Flush(box *Box) {
 		box.cursor.Y = y
 		box.Prints(line)
 	}
+
+	b.lines = []string{}
 }
 
 func (b *Buffer) Prints(s string) {
