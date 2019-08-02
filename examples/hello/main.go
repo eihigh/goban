@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-
 	"github.com/eihigh/goban"
 )
 
@@ -10,7 +8,7 @@ func main() {
 	goban.Main(app, view)
 }
 
-func app(_ context.Context, es goban.Events) error {
+func app(es goban.Events) error {
 	goban.Show()
 	es.ReadKey()
 	return nil

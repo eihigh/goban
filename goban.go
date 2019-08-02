@@ -71,7 +71,7 @@ func Sync() {
 // When the app exits, Main also exits.
 // If cancelled for any other reason, Main exits and the
 // cancellation is propagated to the context.
-func Main(app func(context.Context, Events) error, viewfns ...func()) error {
+func Main(app func(Events) error, viewfns ...func()) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -104,7 +104,7 @@ func Main(app func(context.Context, Events) error, viewfns ...func()) error {
 	signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	go func() {
-		e := app(ctx, events)
+		e := app(events)
 		once.Do(func() {
 			err = e
 			close(done)
