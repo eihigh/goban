@@ -49,6 +49,10 @@ func (es Events) ReadMouse() *tcell.EventMouse {
 	}
 }
 
+func Run(app func(w *Window) error, views ...ViewFunc) error {
+	return nil
+}
+
 // Show calls each View to refresh the screen.
 func Show() {
 	screen.Clear()
