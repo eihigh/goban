@@ -3,18 +3,9 @@ package goban
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
 	"github.com/gdamore/tcell"
-)
-
-var (
-	screen tcell.Screen
-	views  []View
-	m      sync.Mutex
 )
 
 var (
@@ -23,61 +14,60 @@ var (
 	ErrAborted = fmt.Errorf("program aborted")
 )
 
-// Events is an alias of chan tcell.Event and
-// provides some reading functions.
-type Events chan tcell.Event
+var (
+	m      sync.Mutex
+	root   *Window
+	screen tcell.Screen
 
-// ReadKey waits for a key event to the channel and returns it.
-// Other events are ignored.
-func (es Events) ReadKey() *tcell.EventKey {
-	for {
-		e := <-es
-		if e, ok := e.(*tcell.EventKey); ok {
-			return e
+	receivers []Events // TODO Lock
+)
+
+type Application interface {
+	Main(context.Context, *Window) error
+	Draw(*Box)
+}
+
+func addReceiver(ch Events) {
+	receivers = append(receivers, ch)
+}
+
+func removeReceiver(ch Events) {
+	i := -1
+	for j, r := range receivers {
+		if r == ch {
+			i = j
 		}
+	}
+	if i != -1 {
+		receivers = append(receivers[:i], receivers[i+1:]...)
 	}
 }
 
-// ReadMouse waits for a mouse event to the channel and returns it.
-// Other events are ignored.
-func (es Events) ReadMouse() *tcell.EventMouse {
-	for {
-		e := <-es
-		if e, ok := e.(*tcell.EventMouse); ok {
-			return e
-		}
-	}
-}
-
-func Run(app func(w *Window) error, views ...ViewFunc) error {
-	return nil
-}
-
-// Show calls each View to refresh the screen.
-func Show() {
+func render() {
 	screen.Clear()
-	for _, v := range views {
-		v.View()
-	}
+	root.render(screen)
 	screen.Show()
 }
 
-// Sync is similar to Show, but calls tcell.Screen's Sync instead.
-func Sync() {
-	screen.Clear()
-	for _, v := range views {
-		v.View()
-	}
-	screen.Sync()
+type appFunc struct {
+	main func(context.Context, *Window) error
+	draw func(*Box)
 }
 
-// Main runs the main process.
-// When the app exits, Main also exits.
-// If cancelled for any other reason, Main exits and the
-// cancellation is propagated to the context.
-func Main(app func(Events) error, viewfns ...func()) error {
-	m.Lock()
-	defer m.Unlock()
+func (a appFunc) Main(ctx context.Context, w *Window) error {
+	return a.main(ctx, w)
+}
+
+func (a appFunc) Draw(b *Box) {
+	a.draw(b)
+}
+
+func RunFunc(main func(ctx context.Context, w *Window) error, draw func(*Box)) error {
+	a := appFunc{main, draw}
+	return Run(a)
+}
+
+func Run(a Application) error {
 
 	var err error
 
@@ -96,52 +86,26 @@ func Main(app func(Events) error, viewfns ...func()) error {
 	screen.EnableMouse()
 	screen.Clear()
 
-	for _, f := range viewfns {
-		PushViewFunc(f)
-	}
+	m.Lock()
+	root = newWindow()
+	root.PushView(a)
+	m.Unlock()
+	ctx := context.TODO()
 
-	events := make(Events)
-	once := &sync.Once{}
-	done := make(chan struct{})
-	ctx, cancel := context.WithCancel(context.Background())
-	sigc := make(chan os.Signal)
-	signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	go func() {
-		e := app(events)
-		once.Do(func() {
-			err = e
-			close(done)
-		})
-	}()
-	go func() {
-		e := poll(ctx, events)
-		once.Do(func() {
-			err = e
-			close(done)
-		})
-	}()
-	go func() {
-		<-sigc
-		once.Do(func() {
-			err = ErrAborted
-			close(done)
-		})
-	}()
-
-	<-done
-	cancel()
-
+	addReceiver(root.events)
+	err = a.Main(ctx, root)
+	removeReceiver(root.events)
 	return err
 }
 
-func poll(ctx context.Context, es Events) error {
+func poll(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
+
 		e := screen.PollEvent()
 		switch e := e.(type) {
 		case *tcell.EventKey:
@@ -150,8 +114,98 @@ func poll(ctx context.Context, es Events) error {
 				return ErrAborted
 			}
 		}
-		go func() {
-			es <- e
-		}()
+
+		// broadcast
+		for _, r := range receivers {
+			r := r
+			go func() {
+				r <- e
+			}()
+		}
 	}
 }
+
+// Main runs the main process.
+// When the app exits, Main also exits.
+// If cancelled for any other reason, Main exits and the
+// cancellation is propagated to the context.
+// func Main(app func(Events) error, viewfns ...func()) error {
+// 	m.Lock()
+// 	defer m.Unlock()
+//
+// 	var err error
+//
+// 	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
+// 	screen, err = tcell.NewScreen()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer screen.Fini()
+//
+// 	if err = screen.Init(); err != nil {
+// 		return err
+// 	}
+//
+// 	screen.SetStyle(tcell.StyleDefault)
+// 	screen.EnableMouse()
+// 	screen.Clear()
+//
+// 	for _, f := range viewfns {
+// 		PushViewFunc(f)
+// 	}
+//
+// 	events := make(Events)
+// 	once := &sync.Once{}
+// 	done := make(chan struct{})
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	sigc := make(chan os.Signal)
+// 	signal.Notify(sigc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+//
+// 	go func() {
+// 		e := app(events)
+// 		once.Do(func() {
+// 			err = e
+// 			close(done)
+// 		})
+// 	}()
+// 	go func() {
+// 		e := poll(ctx, events)
+// 		once.Do(func() {
+// 			err = e
+// 			close(done)
+// 		})
+// 	}()
+// 	go func() {
+// 		<-sigc
+// 		once.Do(func() {
+// 			err = ErrAborted
+// 			close(done)
+// 		})
+// 	}()
+//
+// 	<-done
+// 	cancel()
+//
+// 	return err
+// }
+//
+// func poll(ctx context.Context, es Events) error {
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			return nil
+// 		default:
+// 		}
+// 		e := screen.PollEvent()
+// 		switch e := e.(type) {
+// 		case *tcell.EventKey:
+// 			switch e.Key() {
+// 			case tcell.KeyCtrlC:
+// 				return ErrAborted
+// 			}
+// 		}
+// 		go func() {
+// 			es <- e
+// 		}()
+// 	}
+// }

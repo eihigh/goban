@@ -2,16 +2,11 @@ package goban
 
 // View represents a drawing function.
 type View interface {
-	View(*Window)
+	Draw(*Box)
 }
 
-type UI interface {
-	View
-	Main(*Layer)
-}
+type ViewFunc func(*Box)
 
-type ViewFunc func(*Window)
-
-func (f ViewFunc) View(w *Window) {
-	f(w)
+func (f ViewFunc) Draw(b *Box) {
+	f(b)
 }
