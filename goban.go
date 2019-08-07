@@ -1,7 +1,6 @@
 package goban
 
 import (
-	"context"
 	"fmt"
 	"sync"
 
@@ -15,115 +14,109 @@ var (
 )
 
 var (
-	m      sync.Mutex
-	root   *Window
-	screen tcell.Screen
-
-	receivers []Events // TODO Lock
+	m       sync.Mutex
+	root    *Window
+	screen  tcell.Screen
+	windows []*Window
 )
 
-type Application interface {
-	Main(context.Context, *Window) error
-	Draw(*Box)
+func RunFunc(main func(*Window) error, view func(*Box)) error {
+	return nil
 }
 
-func addReceiver(ch Events) {
-	receivers = append(receivers, ch)
+func Run(w window) error {
+	return nil
 }
 
-func removeReceiver(ch Events) {
-	i := -1
-	for j, r := range receivers {
-		if r == ch {
-			i = j
-		}
-	}
-	if i != -1 {
-		receivers = append(receivers[:i], receivers[i+1:]...)
-	}
-}
-
-func render() {
-	screen.Clear()
-	root.render(screen)
-	screen.Show()
-}
-
-type appFunc struct {
-	main func(context.Context, *Window) error
-	draw func(*Box)
-}
-
-func (a appFunc) Main(ctx context.Context, w *Window) error {
-	return a.main(ctx, w)
-}
-
-func (a appFunc) Draw(b *Box) {
-	a.draw(b)
-}
-
-func RunFunc(main func(ctx context.Context, w *Window) error, draw func(*Box)) error {
-	a := appFunc{main, draw}
-	return Run(a)
-}
-
-func Run(a Application) error {
-
-	var err error
-
-	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
-	screen, err = tcell.NewScreen()
-	if err != nil {
-		return err
-	}
-	defer screen.Fini()
-
-	if err = screen.Init(); err != nil {
-		return err
-	}
-
-	screen.SetStyle(tcell.StyleDefault)
-	screen.EnableMouse()
-	screen.Clear()
-
-	m.Lock()
-	root = newWindow()
-	root.PushView(a)
-	m.Unlock()
-	ctx := context.TODO()
-
-	addReceiver(root.events)
-	err = a.Main(ctx, root)
-	removeReceiver(root.events)
-	return err
-}
-
-func poll(ctx context.Context) error {
+func poll() {
 	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-		}
-
 		e := screen.PollEvent()
-		switch e := e.(type) {
-		case *tcell.EventKey:
-			switch e.Key() {
-			case tcell.KeyCtrlC:
-				return ErrAborted
+		m.Lock()
+		for _, w := range windows {
+			select {
+			case <-w.Done():
+			case w.Events() <- e:
+			default:
 			}
 		}
-
-		// broadcast
-		for _, r := range receivers {
-			r := r
-			go func() {
-				r <- e
-			}()
-		}
+		m.Unlock()
 	}
 }
+
+// func app(ui *goban.UI) error {
+// 	popup(ui)
+// 	confirm := widgets.NewConfirm()
+// 	ui.Start(confirm)
+// 	for {
+// 		select {
+// 		case <-ui.Done():
+// 		case e := <-ui.Events():
+// 		default:
+// 		}
+// 	}
+// 	return nil
+// }
+//
+// type someWidget struct {
+// 	goban.Window
+// 	cursor int
+// 	done   chan struct{}
+// }
+//
+// func (w *someWidget) Main(ui *goban.UI) {
+// 	<-ui.Events()
+// }
+//
+// func (w *someWidget) View(b *goban.Box) {
+// 	b.Prints("confirming")
+// }
+//
+// func (w *someWidget) Done() chan struct{} { return w.done }
+// func (w *someWidget) Close()              { close(w.done) }
+//
+// func popup(ui *goban.UI) {
+// 	ui.PushViewFunc(func(b *goban.Box) {
+// 		b.Prints(msg)
+// 	})
+// 	defer ui.PopView()
+//
+// 	ui.Show()
+// 	defer ui.Show()
+//
+// 	for {
+// 		if k := ui.Events().ReadKey(); k.Rune() == ' ' {
+// 			return false
+// 		}
+// 		return true
+// 	}
+// }
+
+// func poll(ctx context.Context) error {
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			return nil
+// 		default:
+// 		}
+//
+// 		e := screen.PollEvent()
+// 		switch e := e.(type) {
+// 		case *tcell.EventKey:
+// 			switch e.Key() {
+// 			case tcell.KeyCtrlC:
+// 				return ErrAborted
+// 			}
+// 		}
+//
+// 		// broadcast
+// 		for _, r := range receivers {
+// 			r := r
+// 			go func() {
+// 				r <- e
+// 			}()
+// 		}
+// 	}
+// }
 
 // Main runs the main process.
 // When the app exits, Main also exits.

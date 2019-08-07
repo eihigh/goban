@@ -2,11 +2,9 @@ package goban
 
 // View represents a drawing function.
 type View interface {
-	Draw(*Box)
+	View(*Box)
 }
 
 type ViewFunc func(*Box)
 
-func (f ViewFunc) Draw(b *Box) {
-	f(b)
-}
+func (f ViewFunc) View(b *Box) { f(b) }

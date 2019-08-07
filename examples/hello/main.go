@@ -1,32 +1,52 @@
 package main
 
 import (
-	"context"
-
 	"github.com/eihigh/goban"
 )
 
 func main() {
-	goban.RunFunc(app, draw)
+	goban.RunFunc(Main, view)
 }
 
-func app(ctx context.Context, w *goban.Window) error {
-	popup(w)
-	w.Show()
+func Main(w *goban.Window) error {
+	confirm := &Confirm{}
+	w.Run(confirm)
+
+	menu := &menuView{}
+	w.PushView(menu)
+	defer w.PopView()
+
+	for {
+		select {
+		case <-confirm.Done():
+		case <-w.Events():
+		}
+	}
 	return nil
 }
 
-func draw(b *goban.Box) {
-	b.Enclose("hello")
+func view(b *goban.Box) {
+	b.Prints("hoge")
 }
 
-func popup(w *goban.Window) {
-	v := func(b *goban.Box) {
-		b.Prints("press any key to close")
-	}
-	w.PushViewFunc(v)
-	defer w.PopView()
+type menuView struct {
+	cursor int
+}
 
-	w.Show()
-	w.Events().ReadKey()
+func (v *menuView) View(b *goban.Box) {
+	b.Print(v.cursor)
+}
+
+type Confirm struct {
+	goban.Window
+	cursor int
+}
+
+func (c *Confirm) Main() error {
+	<-c.Events()
+	return nil
+}
+
+func (c *Confirm) View(b *goban.Box) {
+	b.Print(c.cursor)
 }

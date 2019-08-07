@@ -6,6 +6,11 @@ import "github.com/gdamore/tcell"
 // provides some reading functions.
 type Events chan tcell.Event
 
+// makeEvents makes Events with a fixed capacity.
+func makeEvents() Events {
+	return make(Events, 16)
+}
+
 // ReadKey waits for a key event to the channel and returns it.
 // Other events are ignored.
 func (es Events) ReadKey() *tcell.EventKey {
