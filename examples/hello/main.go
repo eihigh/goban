@@ -5,12 +5,13 @@ import (
 )
 
 func main() {
-	goban.RunFunc(Main, view)
+	goban.RunFunc(app, view)
 }
 
-func Main(w *goban.Window) error {
+func app(w *goban.Window) error {
 	confirm := &Confirm{}
 	w.Run(confirm)
+	// w.Start(confirm)
 
 	menu := &menuView{}
 	w.PushView(menu)
@@ -18,8 +19,9 @@ func Main(w *goban.Window) error {
 
 	for {
 		select {
-		case <-confirm.Done():
+		// case <-confirm.Done():
 		case <-w.Events():
+		default:
 		}
 	}
 	return nil
@@ -38,12 +40,12 @@ func (v *menuView) View(b *goban.Box) {
 }
 
 type Confirm struct {
-	goban.Window
 	cursor int
 }
 
-func (c *Confirm) Main() error {
-	<-c.Events()
+func (c *Confirm) Main(w *goban.Window) error {
+	w.Show()
+	<-w.Events()
 	return nil
 }
 

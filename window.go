@@ -11,23 +11,41 @@ type Window struct {
 	events   Events
 	views    []View
 	children []*Window
+	cb       *tcell.CellBuffer
 	done     chan struct{}
-
-	cb tcell.CellBuffer
 }
 
-type window interface {
-	View
-	Main() error
-	window() *Window
+type Application interface {
+	Main(*Window) error
+	View(*Box)
 }
 
-func (w *Window) window() *Window     { return w }
-func (w *Window) Done() chan struct{} { return w.done }
-func (w *Window) Close()              { close(w.done) }
+func newWindow() *Window {
+	w := &Window{}
+	pushWindow(w)
+	return w
+}
 
 func (w *Window) box() *Box {
 	return nil
+}
+
+func (w *Window) layer() layer {
+	if w.cb == nil {
+		return screen
+	}
+	return w.cb
+}
+
+func (w *Window) render(dst layer) {
+	w.Lock()
+	// render myself
+	copyLayer(dst, w.layer())
+	// render children
+	for _, child := range w.children {
+		child.render(dst)
+	}
+	w.Unlock()
 }
 
 func (w *Window) Show() {
@@ -37,13 +55,14 @@ func (w *Window) Show() {
 		v.View(b)
 	}
 	w.Unlock()
+	render()
 }
 
 func (w *Window) Events() Events {
 	return w.events
 }
 
-func (w *Window) Run(child window) error {
+func (w *Window) Run(app Application) error {
 	return nil
 }
 
