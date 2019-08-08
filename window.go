@@ -30,20 +30,18 @@ func (w *Window) box() *Box {
 	return nil
 }
 
-func (w *Window) layer() layer {
-	if w.cb == nil {
-		return screen
-	}
-	return w.cb
-}
-
-func (w *Window) render(dst layer) {
+func (w *Window) render() {
 	w.Lock()
 	// render myself
-	copyLayer(dst, w.layer())
+	copyLayer(screen, w.cb)
 	// render children
 	for _, child := range w.children {
-		child.render(dst)
+		select {
+		case <-child.done:
+			continue
+		default:
+		}
+		child.render()
 	}
 	w.Unlock()
 }

@@ -48,7 +48,6 @@ func Run(app Application) error {
 	screen.Clear()
 
 	root = newWindow()
-	root.cb = nil
 	root.PushView(app)
 
 	once := &sync.Once{}
@@ -136,9 +135,7 @@ func pushWindow(w *Window) {
 }
 
 func render() {
-	root.Lock()
-	for _, child := range root.children {
-		child.render(screen)
-	}
-	root.Unlock()
+	screen.Clear()
+	root.render()
+	screen.Show()
 }
