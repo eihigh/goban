@@ -9,21 +9,27 @@ func main() {
 }
 
 func app(w *goban.Window) error {
-	confirm := &Confirm{}
-	w.Run(confirm)
+	// confirm := &Confirm{}
+	// w.Run(confirm)
 	// w.Start(confirm)
+	//
+	// for {
+	// 	select {
+	// 	// case <-confirm.Done():
+	// 	case <-w.Events():
+	// 	default:
+	// 	}
+	// }
+	// return nil
+	w.Show()
+	w.Events().ReadKey()
 
 	menu := &menuView{}
 	w.PushView(menu)
 	defer w.PopView()
+	w.Show()
+	w.Events().ReadKey()
 
-	for {
-		select {
-		// case <-confirm.Done():
-		case <-w.Events():
-		default:
-		}
-	}
 	return nil
 }
 

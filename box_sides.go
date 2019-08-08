@@ -12,28 +12,28 @@ func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
 	if left != 0 {
 		x := newb.Pos.X - 1
 		for y := 0; y < newb.Size.Y; y++ {
-			screen.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
+			b.layer.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
 		}
 	}
 
 	if right != 0 {
 		x := newb.Pos.X + newb.Size.X
 		for y := 0; y < newb.Size.Y; y++ {
-			screen.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
+			b.layer.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
 		}
 	}
 
 	if top != 0 {
 		y := newb.Pos.Y - 1
 		for x := 0; x < newb.Size.X; x++ {
-			screen.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
+			b.layer.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
 		}
 	}
 
 	if bottom != 0 {
 		y := newb.Pos.Y + newb.Size.Y
 		for x := 0; x < newb.Size.X; x++ {
-			screen.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
+			b.layer.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
 		}
 	}
 
@@ -126,7 +126,7 @@ func (b *Box) InsideSides(left, top, right, bottom int) *Box {
 func (b *Box) setACS(x, y int, r rune) {
 	a0 := acsAt(x, y)
 	a1 := rune2acs(r)
-	screen.SetContent(x, y, (a0 | a1).Rune(), nil, b.Style)
+	b.layer.SetContent(x, y, (a0 | a1).Rune(), nil, b.Style)
 }
 
 func (b *Box) joinACS(x, y int) {
@@ -156,7 +156,7 @@ func (b *Box) joinACS(x, y int) {
 		me = me &^ acsB
 	}
 
-	screen.SetContent(x, y, me.Rune(), nil, b.Style)
+	b.layer.SetContent(x, y, me.Rune(), nil, b.Style)
 }
 
 func acsAt(x, y int) acs {

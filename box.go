@@ -27,7 +27,14 @@ type Box struct {
 	Scroll Point
 	Style  tcell.Style
 
+	layer  layer
 	cursor Point
+}
+
+type layer interface {
+	GetContent(x, y int) (rune, []rune, tcell.Style, int)
+	SetContent(int, int, rune, []rune, tcell.Style)
+	Size() (int, int)
 }
 
 type runeReader interface {
@@ -39,15 +46,6 @@ type runeReader interface {
 func NewBox(x, y, w, h int) *Box {
 	return &Box{
 		Pos:  Point{x, y},
-		Size: Point{w, h},
-	}
-}
-
-// Screen returns a box of screen size.
-func Screen() *Box {
-	w, h := screen.Size()
-	return &Box{
-		Pos:  Point{0, 0},
 		Size: Point{w, h},
 	}
 }
@@ -90,7 +88,7 @@ func (b *Box) IsClicked(e *tcell.EventMouse) bool {
 func (b *Box) Clear() {
 	for x := b.Pos.X; x < b.Pos.X+b.Size.X; x++ {
 		for y := b.Pos.Y; y < b.Pos.Y+b.Size.Y; y++ {
-			screen.SetContent(x, y, ' ', nil, b.Style)
+			b.layer.SetContent(x, y, ' ', nil, b.Style)
 		}
 	}
 }
@@ -140,7 +138,7 @@ func (b *Box) print(reader runeReader) error {
 		default:
 			x, y, err := b.actualPoint()
 			if err == nil {
-				screen.SetContent(x, y, r, nil, b.Style)
+				b.layer.SetContent(x, y, r, nil, b.Style)
 				w := runewidth.RuneWidth(r)
 				b.cursor.X += w
 			}
@@ -168,7 +166,7 @@ func (b *Box) newLine() {
 		if err != nil {
 			break
 		}
-		screen.SetContent(x, y, ' ', nil, b.Style)
+		b.layer.SetContent(x, y, ' ', nil, b.Style)
 		b.cursor.X++
 	}
 	b.cursor.X = 0
@@ -182,4 +180,16 @@ func (b *Box) escape(rd runeReader) {
 	}
 	s.scan()
 	rd.UnreadRune()
+}
+
+func copyLayer(dst, src layer) {
+	w, h := src.Size()
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			m, c, style, _ := src.GetContent(x, y)
+			if m != 0 {
+				dst.SetContent(x, y, m, c, style)
+			}
+		}
+	}
 }

@@ -15,19 +15,22 @@ type Window struct {
 	done     chan struct{}
 }
 
-type Application interface {
-	Main(*Window) error
-	View(*Box)
-}
-
 func newWindow() *Window {
-	w := &Window{}
+	w := &Window{
+		events: makeEvents(),
+		cb:     &tcell.CellBuffer{},
+		done:   make(chan struct{}),
+	}
+	w.cb.Resize(screen.Size())
 	pushWindow(w)
 	return w
 }
 
 func (w *Window) box() *Box {
-	return nil
+	width, height := w.cb.Size()
+	b := NewBox(0, 0, width, height)
+	b.layer = w.cb
+	return b
 }
 
 func (w *Window) render() {
@@ -47,10 +50,10 @@ func (w *Window) render() {
 }
 
 func (w *Window) Show() {
-	b := w.box()
 	w.Lock()
+	w.cb.Fill(' ', tcell.StyleDefault)
 	for _, v := range w.views {
-		v.View(b)
+		v.View(w.box())
 	}
 	w.Unlock()
 	render()

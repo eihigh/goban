@@ -23,13 +23,35 @@ var (
 	}
 )
 
+// View represents a drawing function.
+type View interface {
+	View(*Box)
+}
+
+type viewFunc func(*Box)
+
+func (f viewFunc) View(b *Box) { f(b) }
+
+// Application represents an application which can be ran concurrently.
+type Application interface {
+	Main(*Window) error
+	View(*Box)
+}
+
+type applicationFunc struct {
+	main func(*Window) error
+	view func(*Box)
+}
+
+func (f applicationFunc) Main(w *Window) error { return f.main(w) }
+func (f applicationFunc) View(b *Box)          { f.view(b) }
+
 func RunFunc(main func(*Window) error, view func(*Box)) error {
-	return nil
+	app := applicationFunc{main, view}
+	return Run(app)
 }
 
 func Run(app Application) error {
-	root.Lock()
-	defer root.Unlock()
 	var err error
 
 	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
