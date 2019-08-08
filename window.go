@@ -22,7 +22,6 @@ func newWindow() *Window {
 		done:   make(chan struct{}),
 	}
 	w.cb.Resize(screen.Size())
-	pushWindow(w)
 	return w
 }
 
@@ -39,11 +38,11 @@ func (w *Window) render() {
 	copyLayer(screen, w.cb)
 	// render children
 	for _, child := range w.children {
-		select {
-		case <-child.done:
-			continue
-		default:
-		}
+		// select {
+		// case <-child.done:
+		// 	continue
+		// default:
+		// }
 		child.render()
 	}
 	w.Unlock()
@@ -64,7 +63,11 @@ func (w *Window) Events() Events {
 }
 
 func (w *Window) Run(app Application) error {
-	return nil
+	child := newWindow()
+	child.PushView(app)
+	pushWindow(child)
+	w.children = append(w.children, child)
+	return app.Main(child)
 }
 
 func (w *Window) RunFunc(main func(*Window) error, view *Box) error {

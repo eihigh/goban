@@ -71,6 +71,7 @@ func Run(app Application) error {
 
 	root = newWindow()
 	root.PushView(app)
+	pushWindow(root)
 
 	once := &sync.Once{}
 	done := make(chan struct{})
