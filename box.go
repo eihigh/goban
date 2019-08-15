@@ -43,10 +43,11 @@ type runeReader interface {
 }
 
 // NewBox returns a box at the specified position and size.
-func NewBox(x, y, w, h int) *Box {
+func (b *Box) NewBox(x, y, w, h int) *Box {
 	return &Box{
-		Pos:  Point{x, y},
-		Size: Point{w, h},
+		Pos:   Point{x, y},
+		Size:  Point{w, h},
+		layer: b.layer,
 	}
 }
 
@@ -54,7 +55,7 @@ func (b *Box) Fit(dst *Box, dstx, dsty, srcx, srcy float64) *Box {
 	spx, spy := b.rel(srcx, srcy)
 	dpx, dpy := dst.rel(dstx, dsty)
 	dx, dy := dpx-spx, dpy-spy
-	return NewBox(b.Pos.X+dx, b.Pos.Y+dy, b.Size.X, b.Size.Y)
+	return b.NewBox(b.Pos.X+dx, b.Pos.Y+dy, b.Size.X, b.Size.Y)
 }
 
 func (b *Box) CenterOf(dst *Box) *Box {

@@ -27,7 +27,10 @@ func newWindow() *Window {
 
 func (w *Window) box() *Box {
 	width, height := w.cb.Size()
-	b := NewBox(0, 0, width, height)
+	b := &Box{
+		Size:  Point{width, height},
+		layer: w.cb,
+	}
 	b.layer = w.cb
 	return b
 }

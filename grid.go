@@ -110,7 +110,7 @@ func (b *Box) GridCell(g *Grid, left, top, right, bottom int) *Box {
 	right = cols[right]
 	bottom = rows[bottom]
 
-	return NewBox(b.Pos.X+left, b.Pos.Y+top, right-left, bottom-top)
+	return b.NewBox(b.Pos.X+left, b.Pos.Y+top, right-left, bottom-top)
 }
 
 func NFr(n int) Length {

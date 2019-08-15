@@ -90,7 +90,7 @@ func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
 	}
 
 	// draw title
-	tb := NewBox(b.Pos.X+1, b.Pos.Y, b.Size.X-1, 1)
+	tb := b.NewBox(b.Pos.X+1, b.Pos.Y, b.Size.X-1, 1)
 	if left != 0 {
 		tb.Pos.X++
 		tb.Size.X--
@@ -101,7 +101,7 @@ func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
 }
 
 func (b *Box) InsideSides(left, top, right, bottom int) *Box {
-	newb := NewBox(b.Pos.X, b.Pos.Y, b.Size.X, b.Size.Y)
+	newb := b.NewBox(b.Pos.X, b.Pos.Y, b.Size.X, b.Size.Y)
 
 	if left != 0 {
 		newb.Pos.X++
