@@ -12,28 +12,28 @@ func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
 	if left != 0 {
 		x := newb.Pos.X - 1
 		for y := 0; y < newb.Size.Y; y++ {
-			screen.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
+			screen.SetContent(x, y+newb.Pos.Y, acsV, nil, b.Style)
 		}
 	}
 
 	if right != 0 {
 		x := newb.Pos.X + newb.Size.X
 		for y := 0; y < newb.Size.Y; y++ {
-			screen.SetContent(x, y+newb.Pos.Y, '│', nil, b.Style)
+			screen.SetContent(x, y+newb.Pos.Y, acsV, nil, b.Style)
 		}
 	}
 
 	if top != 0 {
 		y := newb.Pos.Y - 1
 		for x := 0; x < newb.Size.X; x++ {
-			screen.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
+			screen.SetContent(x+newb.Pos.X, y, acsH, nil, b.Style)
 		}
 	}
 
 	if bottom != 0 {
 		y := newb.Pos.Y + newb.Size.Y
 		for x := 0; x < newb.Size.X; x++ {
-			screen.SetContent(x+newb.Pos.X, y, '─', nil, b.Style)
+			screen.SetContent(x+newb.Pos.X, y, acsH, nil, b.Style)
 		}
 	}
 
@@ -52,24 +52,24 @@ func (b *Box) DrawSides(title string, left, top, right, bottom int) *Box {
 		if top == 0 {
 			b.joinACS(ax, ay-1)
 		} else {
-			b.setACS(ax, ay, '┌')
+			b.setACS(ax, ay, acsRB)
 		}
 		if bottom == 0 {
 			b.joinACS(ax, by+1)
 		} else {
-			b.setACS(ax, by, '└')
+			b.setACS(ax, by, acsTR)
 		}
 	}
 	if right != 0 {
 		if top == 0 {
 			b.joinACS(bx, ay-1)
 		} else {
-			b.setACS(bx, ay, '┐')
+			b.setACS(bx, ay, acsLB)
 		}
 		if bottom == 0 {
 			b.joinACS(bx, by+1)
 		} else {
-			b.setACS(bx, by, '┘')
+			b.setACS(bx, by, acsLT)
 		}
 	}
 	if top != 0 {
